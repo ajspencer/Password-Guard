@@ -1,0 +1,21 @@
+{
+  "manifest_version": 2,
+
+  "name": "Password Guard",
+  "description": "This extension protects your security by hiding your passwords from people with access to your computer.",
+  "version": "1.1",
+
+  "browser_action": {
+    "default_icon": "icon.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js" : ["seedrandom.min.js", "jquery-3.1.0.min.js", "main.js"]
+    }
+  ],
+  "permissions": [
+    "activeTab",
+    "https://ajax.googleapis.com/"
+  ]
+}
