@@ -11,13 +11,11 @@
         //Make an array of every printable ascii character
         var asciiValues = [];
         for(var i = 32; i < 256; i++) {
-            //Don't do anything for ascii values that are blank or not printable
             asciiValues.push(String.fromCharCode(i));
         }
         this.vals = {};
         //Now set every ascii value to map to a random, different ascii value
         for(var i = 32; i < 254; i++) {
-            //Don't do anything for ascii values that are blank or not printable
             var index = Math.floor(Math.random()*asciiValues.length);
             this.vals[String.fromCharCode(i)] = asciiValues[index];
             asciiValues.splice(index,1);
