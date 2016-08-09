@@ -143,18 +143,34 @@
         }
     };
 
+   /*
+    * Event handler to be called when the form is submitted
+    * For every input, it hides the input and then changes the password back
+    * Note: the inputs are bound to the function call be the caller
+    */
     function formSubmission() {
         var inputs = $(this);
         console.log("on submit function called");
-        var decryptedText = "";
         $(inputs).each(function () {
             //console.log("current password: " + $(this).val());
-            decryptedText = encryptor.decrypt($(this).val());
-            $(this).hide();
+            var encryptedText = $(this).val();
+            var decryptedText = encryptor.decrypt($(this).val());
+            //if someone has changed this to text, hide it
+            console.log($(this));
+            console.log($(this).prop("type"));
+            if($(this).prop("type").toLowerCase() === "text") {
+                $(this).hide();
+            }
             $(this).val(encryptor.decrypt($(this).val()));
             console.log("resetting password to: " + $(this).val());
+            //Give two seconds for the password to be unencrypted, then reset it back
+            setTimeout(function() {
+                console.log("changing back");
+                $(this).val(encryptedText);
+            }, 2000);
         });
     }
+
 
    /*
     * Binds the encryption daemon to all of the input elements specified.
@@ -165,8 +181,8 @@
     */
     function turnEncryptionOn(inputs) {
         var host = window.location.host;
-        //This won't work on bank of america because of how they handle passwords
         if(host.includes("bankofamerica")) return;
+        //This won't work on bank of america because of how they handle passwords
         console.log(inputs);
         //For every password input bind our change function to them to change the letters
         $(inputs).each(function (index, elem) {
@@ -178,7 +194,20 @@
             setTimeout(detectInputChange.bind(elem), 500);
         });
         //Now add the listener for the form submitting
-        $("form").on('submit', formSubmission.bind(inputs));
+        $("form").each(function() {
+            console.log("adding to form: ");
+            console.log($(this));
+            $(this).on("submit", formSubmission.bind(inputs));
+        });
+
+        //If the form doesn't have a submit button, bind the events to the anchor tags and buttons
+        if($("form").find('input[type="submit"]').length == 0) {
+            ($("form").find('a')).each(function() {
+                console.log("binding click on");
+                console.log($(this));
+                $(this).on("click", formSubmission.bind(inputs));
+            });
+        }
     }
 
     turnEncryptionOn(getPasswordInputs());
