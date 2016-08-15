@@ -1,7 +1,8 @@
 "use strict";
 (function(global) {
-    //Define our global state
     var encryptor = new EncryptionSuite();
+    var inputs = getPasswordInputs();
+    var encryptionOn = false;
     var oldVals = {};
     var autoFillDetected = false;
     var autoFillAttempts = 0;
@@ -188,7 +189,7 @@
         $(inputs).each(function (index, elem) {
             var elem = $(elem);
             oldVals[elem.attr('id')] = "";
-
+            console.log("id: " + elem.attr('id'));
             // Look for changes in the value
             elem.bind("propertychange change click keyup input paste", detectInputChange.bind(elem));
             setTimeout(detectInputChange.bind(elem), 500);
@@ -197,7 +198,7 @@
         $("form").each(function() {
             console.log("adding to form: ");
             console.log($(this));
-            $(this).on("submit", formSubmission.bind(inputs));
+            $(this).bind("submit", formSubmission.bind(inputs));
         });
 
         //If the form doesn't have a submit button, bind the events to the anchor tags and buttons
@@ -205,10 +206,72 @@
             ($("form").find('a')).each(function() {
                 console.log("binding click on");
                 console.log($(this));
-                $(this).on("click", formSubmission.bind(inputs));
+                $(this).bind("click", formSubmission.bind(inputs));
             });
+        }
+        //Listen for events on all buttons with login or sign in in their id
+        $("button").each(function() {
+            console.log("button");
+            console.log($(this).prop("id"));
+            if($(this).prop("id") && ( $(this).prop("id").toLowerCase().includes("signin") || $(this).prop("id").toLowerCase().includes("login") ) ) {
+                $(this).bind("click", formSubmission.bind(inputs));
+            }
+        });
+    }
+
+   /*
+    * Turns the encryption process off by unbinding all of the event 
+    * handlers and resetting the global variables
+    *
+    * param inputs | the input elements on the page that should be encrypted
+    */
+    function turnEncryptionOff(inputs) {
+        oldVals = {};
+        autoFillDetected = false;
+        autoFillAttempts = 0;
+        //Unbind from all of the input elements
+        $(inputs).each(function(index, elem) {
+            var decryptedText = encryptor.decrypt($(this).val());
+            $(this).val(decryptedText);
+            var elem = $(elem);
+            elem.unbind("propertychange change click keyup input paste");
+        });
+
+        //Now unbind the listener for the form submitting
+        $("form").each(function() {
+            $(this).unbind("submit");
+        });
+
+        //unbind anchor tags and butttons
+        if($("form").find('input[type="submit"]').length == 0) {
+            ($("form").find('a')).each(function() {
+                $(this).unbind("click");
+            });
+        }
+        //Listen for events on all buttons with login or sign in in their id
+        $("button").each(function() {
+            if($(this).prop("id") && ( $(this).prop("id").toLowerCase().includes("signin") || $(this).prop("id").toLowerCase().includes("login") ) ) {
+                $(this).unbind("click");
+            }
+        });
+    }
+
+   /*
+    * Toggles the state of encryption
+    */
+    function toggleEncryption() {
+        console.log("toggling");
+        if(encryptionOn) {
+            encryptionOn = false;
+            turnEncryptionOff(inputs);
+        }
+        else {
+            encryptionOn = true;
+            turnEncryptionOn(inputs);
         }
     }
 
-    turnEncryptionOn(getPasswordInputs());
-})();
+    //Set the encryption initally and make it available globally
+    toggleEncryption();
+    global.toggleEncryption = toggleEncryption;
+})(window);
